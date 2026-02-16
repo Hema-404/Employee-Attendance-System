@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Employee Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+    <nav class="navbar">
+  <div class="nav-left">
+    <a href="index.html" class="home-link">Home</a>
+  </div>
+  <div class="nav-center">
+    <span id="system-title">Attendance Marking System</span><br>
+    <small id="user-role">Role: Employee</small>
+  </div>
+  <div class="nav-right">
+    <button id="logoutBtn">Logout</button>
+  </div>
+</nav>
+
+
+<div class="container">
+  <h2>Employee Dashboard</h2>
+
+  <div class="actions">
+    <button id="inBtn">Check In</button>
+    <button id="checkoutBtn">Check Out</button>
+  </div>
+
+  <!-- DASHBOARD CARDS -->
+<div class="dashboard-cards">
+
+  <div class="card">
+    <h4>Today's Status</h4>
+    <p id="todayStatus">Loading...</p>
+  </div>
+
+  <div class="card">
+    <h4>This Month</h4>
+    <p id="monthSummary">Loading...</p>
+  </div>
+
+  <div class="card">
+    <h4>Total Hours (This Month)</h4>
+    <p id="monthHours">Loading...</p>
+  </div>
+
+  <div class="card">
+    <h4>Quick Action</h4>
+    <button id="quickIn">Check In</button>
+    <button id="quickOut">Check Out</button>
+  </div>
+
+</div>
+
+<h3>Recent Attendance (Last 7 Days)</h3>
+<table id="recentTable">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Status</th>
+      <th>Hours</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+
+
+  <div class="tabs">
+    <button id="historyTab" class="tab-btn active">My Attendance History</button>
+    <button id="profileTab" class="tab-btn">Profile</button>
+  </div>
+
+ 
+  <div id="historySection">
+    <table id="attendanceTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Check In</th>
+          <th>Check Out</th>
+          <th>Status</th>
+          <th>Total Hours</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="profileSection" style="display:none;">
+    <div class="profile-card">
+      <p><strong>Name:</strong> <span id="pName"></span></p>
+      <p><strong>Email:</strong> <span id="pEmail"></span></p>
+      <p><strong>Employee ID:</strong> <span id="pEmpId"></span></p>
+      <p><strong>Department:</strong> <span id="pDept"></span></p>
+      <p><strong>Role:</strong> <span id="pRole"></span></p>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+
+const user = JSON.parse(localStorage.getItem('user'));
+
+if (!user) {
+  window.location.href = 'index.html';
+}
+
+
+document.getElementById('user-role').innerText = `Role: ${user.role}`;
+
+const userId = user.id; 
+
+const loadAttendance = async () => {
+  const res = await fetch(`http://localhost:3000/employee/history/${userId}`);
+  const data = await res.json();
+
+  const tbody = document.querySelector('#attendanceTable tbody');
+  tbody.innerHTML = '';
+
+  data.forEach(a => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${a.date}</td>
+        <td>${a.checkInTime || '-'}</td>
+        <td>${a.checkOutTime || '-'}</td>
+        <td>${a.status}</td>
+        <td>${a.totalHours || '-'}</td>
+      </tr>
+    `;
+  });
+};
+
+document.getElementById('inBtn').addEventListener('click', async () => {
+  await fetch('http://localhost:3000/employee/checkin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+
+  alert('Checked in!');
+  loadAttendance();
+});
+
+
+document.getElementById('checkoutBtn').addEventListener('click', async () => {
+  await fetch('http://localhost:3000/employee/checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+
+  alert('Checked out!');
+  loadAttendance();
+});
+
+const historyTab = document.getElementById('historyTab');
+const profileTab = document.getElementById('profileTab');
+const historySection = document.getElementById('historySection');
+const profileSection = document.getElementById('profileSection');
+
+historyTab.addEventListener('click', () => {
+  historySection.style.display = 'block';
+  profileSection.style.display = 'none';
+  historyTab.classList.add('active');
+  profileTab.classList.remove('active');
+});
+
+profileTab.addEventListener('click', () => {
+  historySection.style.display = 'none';
+  profileSection.style.display = 'block';
+  profileTab.classList.add('active');
+  historyTab.classList.remove('active');
+
+  loadProfile();
+});
+
+
+function loadProfile() {
+  document.getElementById('pName').innerText = user.name;
+  document.getElementById('pEmail').innerText = user.email || "N/A";
+  document.getElementById('pEmpId').innerText = user.employeeId || "N/A";
+  document.getElementById('pDept').innerText = user.department || "N/A";
+  document.getElementById('pRole').innerText = user.role;
+}
+
+
+
+async function loadDashboard() {
+  const res = await fetch(`http://localhost:3000/employee/dashboard/${userId}`);
+  const data = await res.json();
+
+  document.getElementById('todayStatus').innerText = data.todayStatus;
+  document.getElementById('monthSummary').innerText =
+    `Present: ${data.present}, Absent: ${data.absent}, Late: ${data.late}`;
+
+  document.getElementById('monthHours').innerText =
+    `${data.totalHours || 0} Hours`;
+
+  loadRecentAttendance(data.recent);
+}
+function loadRecentAttendance(recent) {
+  const tbody = document.querySelector('#recentTable tbody');
+  tbody.innerHTML = '';
+
+  recent.forEach(r => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${r.date}</td>
+        <td>${r.status}</td>
+        <td>${r.totalHours || '-'}</td>
+      </tr>
+    `;
+  });
+}
+document.getElementById('quickIn').addEventListener('click', async () => {
+  await fetch('http://localhost:3000/employee/checkin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  loadDashboard();
+  loadAttendance();
+});
+
+document.getElementById('quickOut').addEventListener('click', async () => {
+  await fetch('http://localhost:3000/employee/checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  loadDashboard();
+  loadAttendance();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem('user');
+  window.location.href = 'index.html';
+});
+
+loadAttendance();
+loadDashboard();
+</script>
+
+</body>
+</html>

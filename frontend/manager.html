@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manager Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="index.html" class="home-link">Home</a>
+  </div>
+
+  <div class="nav-center">
+    <span id="system-title">Attendance Marking System</span><br>
+    <small id="user-role"></small>
+  </div>
+
+  <div class="nav-right">
+    <button id="logoutBtn">Logout</button>
+  </div>
+</nav>
+
+
+<div class="container">
+
+  <h2>Manager Dashboard</h2>
+
+  
+  <div class="dashboard-cards">
+
+    <div class="card">
+      <h3>Total Employees</h3>
+      <p id="totalEmployees">Loading...</p>
+    </div>
+
+    <div class="card">
+      <h3>Present Today</h3>
+      <p id="presentCount">Loading...</p>
+    </div>
+
+    <div class="card">
+      <h3>Absent Today</h3>
+      <p id="absentCount">Loading...</p>
+    </div>
+
+    <div class="card">
+      <h3>Late Arrivals</h3>
+      <p id="lateCount">Loading...</p>
+    </div>
+
+  </div>
+
+
+ 
+  <h3>Absent Employees Today</h3>
+  <ul id="absentList"></ul>
+
+  <h3>All Employees Attendance</h3>
+
+  <table id="attendanceTable">
+    <thead>
+      <tr>
+        <th>Employee Name</th>
+        <th>Employee ID</th>
+        <th>Date</th>
+        <th>Check In</th>
+        <th>Check Out</th>
+        <th>Status</th>
+        <th>Total Hours</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+</div>
+
+
+<script>
+
+
+const user = JSON.parse(localStorage.getItem('user'));
+
+if (!user) {
+  window.location.href = 'index.html';
+}
+else if (user.role !== 'manager') {
+  alert("Access Denied! Only managers can access this page.");
+  window.location.href = 'employee.html';
+}
+else {
+  document.getElementById('user-role').innerText = `Role: ${user.role}`;
+  loadAllAttendance();
+  loadDashboard();
+}
+
+
+
+async function loadDashboard() {
+  try {
+    const res = await fetch('http://localhost:3000/manager/dashboard');
+    const data = await res.json();
+
+    document.getElementById("totalEmployees").innerText = data.totalEmployees;
+    document.getElementById("presentCount").innerText = data.todayAttendance.present;
+    document.getElementById("absentCount").innerText = data.todayAttendance.absent;
+    document.getElementById("lateCount").innerText = data.todayAttendance.late;
+
+    const absentList = document.getElementById("absentList");
+    absentList.innerHTML = "";
+
+    if (data.absentEmployees.length === 0) {
+      absentList.innerHTML = "<li class='no-absent'>No employees absent today 🎉</li>";
+    } else {
+      data.absentEmployees.forEach(emp => {
+        const li = document.createElement("li");
+        li.textContent = emp.name + " (" + emp.employeeId + ")";
+        absentList.appendChild(li);
+      });
+    }
+
+  } catch (error) {
+    console.error("Error loading dashboard:", error);
+  }
+}
+
+
+
+
+async function loadAllAttendance() {
+  try {
+    const res = await fetch('http://localhost:3000/manager/all');
+    const data = await res.json();
+
+    const tbody = document.querySelector('#attendanceTable tbody');
+    tbody.innerHTML = '';
+
+    data.forEach(a => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${a.name}</td>
+          <td>${a.employeeId}</td>
+          <td>${a.date}</td>
+          <td>${a.checkInTime ? new Date(a.checkInTime).toLocaleTimeString() : '-'}</td>
+          <td>${a.checkOutTime ? new Date(a.checkOutTime).toLocaleTimeString() : '-'}</td>
+          <td>${a.status}</td>
+          <td>${a.totalHours || '-'}</td>
+        </tr>
+      `;
+    });
+
+  } catch (error) {
+    console.error("Error loading attendance:", error);
+  }
+}
+
+
+
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem('user');
+  window.location.href = 'index.html';
+});
+
+</script>
+
+</body>
+</html>

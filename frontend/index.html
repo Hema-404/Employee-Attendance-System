@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <h1 class="top">Attendance Marking System</h1>
+
+  <div class="container">
+    <h1 class="login">Login</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <select id="role" required>
+        <option value="">Select Role</option>
+        <option value="employee">Employee</option>
+        <option value="manager">Manager</option>
+      </select>
+      <button type="submit">Login</button>
+    </form>
+    <p class="link">Not registered? <a href="register.html">Register</a></p>
+  </div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const role = document.getElementById('role').value;
+
+  const res = await fetch('http://localhost:3000/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    alert(data.error);
+    return;
+  }
+
+  if (data.user.role !== role) {
+    alert(`Role mismatch! You are registered as ${data.user.role}`);
+    return;
+  }
+
+  
+  localStorage.setItem('user', JSON.stringify(data.user));
+
+  
+  if (role === 'employee') {
+    window.location.href = 'employee.html';
+  } 
+  else if (role === 'manager') {
+    window.location.href = 'manager.html';
+  }
+});
+</script>
+
+</body>
+</html>
