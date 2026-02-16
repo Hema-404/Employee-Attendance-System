@@ -18,7 +18,7 @@ Manager Features
  1. **Clone the repository**
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Hema-404/Employee-Attendance-System.git
 cd backend
 Open in browser
 
@@ -59,12 +59,22 @@ Select role (Employee / Manager) → Login
 Employee: Mark attendance, view dashboard and history
 Manager: View team dashboard, all attendance, and reports
 
+How to Run
+npm init -y
+npm install express mysql2 body-parser cors
+node server.js
+
+
 Technologies Used
 
 HTML5
 CSS3 (Responsive & elegant design)
 JavaScript (Vanilla JS, localStorage for data persistence)
 SQL
+
+screenshots
+<img width="1844" height="924" alt="image" src="https://github.com/user-attachments/assets/a792bc3e-e954-4d28-b7db-be3ad0063a7a" />
+
 
 Key Features
 
