@@ -73,3 +73,10 @@ LocalStorage-based authentication for demo purposes
 Employee Dashboard with attendance stats and charts
 Manager Dashboard with team stats and charts
 Responsive design for mobile and desktop
+
+
+
+AUTHOR:
+Name:Hema M (Hema-404)
+College Name:Vel Tech High Tech Dr.Rangarajan Dr.Sakunthala Engineering College
+Contact no: 7402305404
